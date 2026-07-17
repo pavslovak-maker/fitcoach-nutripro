@@ -87,10 +87,25 @@ async function bootstrap() {
   });
 
   const port = parseInt(process.env.PORT ?? '3001', 10);
+  console.log(`🎯 Attempting to listen on port ${port}...`);
   await app.listen({ port, host: '0.0.0.0' });
+  console.log(`✅ Server successfully listening on port ${port}`);
 }
 
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled Rejection:', reason);
+  process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+console.log('🚀 Bootstrap starting...');
+
 bootstrap().catch((err) => {
-  console.error('Fatal error:', err);
+  console.error('❌ Fatal error during bootstrap:', err);
+  console.error(err.stack);
   process.exit(1);
 });

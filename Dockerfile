@@ -22,5 +22,7 @@ RUN npm run build
 
 EXPOSE 3001
 
+ENV NODE_ENV=production
+
 # Start server directly
-CMD ["sh", "-c", "echo 'Starting...' && npx tsx src/server.ts 2>&1"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/server.ts"]
