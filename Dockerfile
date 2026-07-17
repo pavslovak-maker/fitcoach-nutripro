@@ -29,4 +29,4 @@ ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=384"
 
 # Start compiled server (lighter on memory than tsx)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+CMD ["sh", "-c", "echo '=== MIGRATION START ===' && npx prisma migrate deploy; echo \"=== MIGRATION EXIT CODE: $? ===\"; echo '=== STARTING SERVER ===' && node dist/server.js; echo \"=== SERVER EXIT CODE: $? ===\""]
