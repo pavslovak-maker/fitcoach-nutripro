@@ -15,13 +15,10 @@ RUN npx prisma generate
 # Copy source
 COPY . .
 
-# Build backend (if needed)
-# RUN npm run build
+# Build backend
+RUN npm run build
 
 EXPOSE 3001
 
-# Build if needed
-RUN npm run build || true
-
-# Start with migrations
-CMD sh -c "npx prisma migrate deploy && npm run dev"
+# Start with migrations and production server
+CMD sh -c "npx prisma migrate deploy && npm start"
