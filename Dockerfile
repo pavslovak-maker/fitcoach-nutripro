@@ -21,4 +21,4 @@ RUN npm run build
 EXPOSE 3001
 
 # Start with migrations and production server
-CMD sh -c "npx prisma migrate deploy && npx tsx src/server.ts"
+CMD sh -c "echo 'DATABASE_URL: '$DATABASE_URL && echo 'JWT_SECRET: '$JWT_SECRET && npx prisma migrate deploy && npx tsx src/server.ts"
