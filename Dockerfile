@@ -23,4 +23,4 @@ RUN npm run build
 EXPOSE 3001
 
 # Start server directly
-CMD ["sh", "-c", "npx prisma migrate deploy && exec npx tsx src/server.ts"]
+CMD ["npx", "tsx", "src/server.ts"]
