@@ -30,10 +30,10 @@ export default function RegisterPage() {
     stravovaci_preference: '', pocet_jidel_denne: 4, food_logging_mode: 'simple',
   });
 
-  const u = (k: string, v: any) => setF(p => ({ ...p, [k]: v }));
-  const toggle = (k: string, item: string) => setF(p => {
+  const u = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }));
+  const toggle = (k: string, item: string) => setF((p: any) => {
     const arr = (p as any)[k] as string[];
-    return { ...p, [k]: arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item] };
+    return { ...p, [k]: arr.includes(item) ? arr.filter((i: string) => i !== item) : [...arr, item] };
   });
 
   const stepValid = [

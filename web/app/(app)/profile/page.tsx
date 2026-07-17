@@ -20,7 +20,7 @@ export default function ProfilePage() {
   }, []);
 
   const handleChange = (field: string, value: any) => {
-    setEdited(prev => ({ ...prev, [field]: value }));
+    setEdited((prev: any) => ({ ...prev, [field]: value }));
     setSaveError('');
     setSaveSuccess(false);
   };

@@ -1,0 +1,216 @@
+[33mcommit d65e4fb0d861518a86599d24edf9ffb30b5aedd8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Tvoje Jméno <tvuj.email@gmail.com>
+Date:   Sat Jul 18 00:07:48 2026 +0200
+
+    Fix Next.js 15 async params and ignore .next build output
+
+ .gitignore                                         |    2 [32m+[m
+ web/.next/app-build-manifest.json                  |   65 [31m-[m
+ web/.next/build-manifest.json                      |   20 [31m-[m
+ web/.next/cache/.rscinfo                           |    1 [31m-[m
+ web/.next/cache/chrome-devtools-workspace-uuid     |    1 [31m-[m
+ web/.next/cache/next-devtools-config.json          |    1 [31m-[m
+ .../cache/webpack/client-development/0.pack.gz     |  Bin [31m302759[m -> [32m0[m bytes
+ .../cache/webpack/client-development/1.pack.gz     |  Bin [31m370886[m -> [32m0[m bytes
+ .../cache/webpack/client-development/10.pack.gz    |  Bin [31m803950[m -> [32m0[m bytes
+ .../cache/webpack/client-development/11.pack.gz    |  Bin [31m204724[m -> [32m0[m bytes
+ .../cache/webpack/client-development/12.pack.gz    |  Bin [31m32967[m -> [32m0[m bytes
+ .../cache/webpack/client-development/13.pack.gz    |  Bin [31m5637218[m -> [32m0[m bytes
+ .../cache/webpack/client-development/14.pack.gz    |  Bin [31m51573[m -> [32m0[m bytes
+ .../cache/webpack/client-development/15.pack.gz    |  Bin [31m99983[m -> [32m0[m bytes
+ .../cache/webpack/client-development/16.pack.gz    |  Bin [31m9136904[m -> [32m0[m bytes
+ .../cache/webpack/client-development/17.pack.gz    |  Bin [31m2710140[m -> [32m0[m bytes
+ .../cache/webpack/client-development/18.pack.gz    |  Bin [31m127675[m -> [32m0[m bytes
+ .../cache/webpack/client-development/2.pack.gz     |  Bin [31m189895[m -> [32m0[m bytes
+ .../cache/webpack/client-development/3.pack.gz     |  Bin [31m264044[m -> [32m0[m bytes
+ .../cache/webpack/client-development/4.pack.gz     |  Bin [31m12551[m -> [32m0[m bytes
+ .../cache/webpack/client-development/5.pack.gz     |  Bin [31m48378[m -> [32m0[m bytes
+ .../cache/webpack/client-development/6.pack.gz     |  Bin [31m1699[m -> [32m0[m bytes
+ .../cache/webpack/client-development/7.pack.gz     |  Bin [31m412227[m -> [32m0[m bytes
+ .../cache/webpack/client-development/8.pack.gz     |  Bin [31m1653737[m -> [32m0[m bytes
+ .../cache/webpack/client-development/9.pack.gz     |  Bin [31m88917[m -> [32m0[m bytes
+ .../cache/webpack/client-development/index.pack.gz |  Bin [31m241806[m -> [32m0[m bytes
+ .../webpack/client-development/index.pack.gz.old   |  Bin [31m238908[m -> [32m0[m bytes
+ .../cache/webpack/server-development/0.pack.gz     |  Bin [31m2701[m -> [32m0[m bytes
+ .../cache/webpack/server-development/1.pack.gz     |  Bin [31m8025043[m -> [32m0[m bytes
+ .../cache/webpack/server-development/10.pack.gz    |  Bin [31m655764[m -> [32m0[m bytes
+ .../cache/webpack/server-development/11.pack.gz    |  Bin [31m1598750[m -> [32m0[m bytes
+ .../cache/webpack/server-development/12.pack.gz    |  Bin [31m364106[m -> [32m0[m bytes
+ .../cache/webpack/server-development/13.pack.gz    |  Bin [31m1489[m -> [32m0[m bytes
+ .../cache/webpack/server-development/14.pack.gz    |  Bin [31m269739[m -> [32m0[m bytes
+ .../cache/webpack/server-development/15.pack.gz    |  Bin [31m8468[m -> [32m0[m bytes
+ .../cache/webpack/server-development/16.pack.gz    |  Bin [31m244337[m -> [32m0[m bytes
+ .../cache/webpack/server-development/17.pack.gz    |  Bin [31m9195[m -> [32m0[m bytes
+ .../cache/webpack/server-development/2.pack.gz     |  Bin [31m225290[m -> [32m0[m bytes
+ .../cache/webpack/server-development/3.pack.gz     |  Bin [31m6439[m -> [32m0[m bytes
+ .../cache/webpack/server-development/4.pack.gz     |  Bin [31m346153[m -> [32m0[m bytes
+ .../cache/webpack/server-development/5.pack.gz     |  Bin [31m1069144[m -> [32m0[m bytes
+ .../cache/webpack/server-development/6.pack.gz     |  Bin [31m5006395[m -> [32m0[m bytes
+ .../cache/webpack/server-development/7.pack.gz     |  Bin [31m2633839[m -> [32m0[m bytes
+ .../cache/webpack/server-development/8.pack.gz     |  Bin [31m80760[m -> [32m0[m bytes
+ .../cache/webpack/server-development/9.pack.gz     |  Bin [31m1166749[m -> [32m0[m bytes
+ .../cache/webpack/server-development/index.pack.gz |  Bin [31m293686[m -> [32m0[m bytes
+ .../webpack/server-development/index.pack.gz.old   |  Bin [31m287856[m -> [32m0[m bytes
+ web/.next/package.json                             |    1 [31m-[m
+ web/.next/prerender-manifest.json                  |   11 [31m-[m
+ web/.next/react-loadable-manifest.json             |    8 [31m-[m
+ web/.next/routes-manifest.json                     |    1 [31m-[m
+ web/.next/server/app-paths-manifest.json           |    9 [31m-[m
+ web/.next/server/app/(app)/checkin/page.js         |  347 [31m--[m
+ .../checkin/page_client-reference-manifest.js      |    1 [31m-[m
+ web/.next/server/app/(app)/nutrition/page.js       |  347 [31m--[m
+ .../nutrition/page_client-reference-manifest.js    |    1 [31m-[m
+ web/.next/server/app/(app)/page.js                 |  358 [31m--[m
+ .../app/(app)/page_client-reference-manifest.js    |    1 [31m-[m
+ .../server/app/(app)/plans/nutrition/[id]/page.js  |  347 [31m--[m
+ .../[id]/page_client-reference-manifest.js         |    1 [31m-[m
+ web/.next/server/app/(app)/plans/page.js           |  347 [31m--[m
+ .../(app)/plans/page_client-reference-manifest.js  |    1 [31m-[m
+ .../server/app/(app)/plans/training/[id]/page.js   |  347 [31m--[m
+ .../[id]/page_client-reference-manifest.js         |    1 [31m-[m
+ web/.next/server/app/(app)/profile/page.js         |  347 [31m--[m
+ .../profile/page_client-reference-manifest.js      |    1 [31m-[m
+ web/.next/server/app/(app)/progress/page.js        |  358 [31m--[m
+ .../progress/page_client-reference-manifest.js     |    1 [31m-[m
+ web/.next/server/app/(app)/workout/page.js         |  347 [31m--[m
+ .../workout/page_client-reference-manifest.js      |    1 [31m-[m
+ web/.next/server/app/_not-found/page.js            |  263 [31m--[m
+ .../_not-found/page_client-reference-manifest.js   |    1 [31m-[m
+ .../server/interception-route-rewrite-manifest.js  |    1 [31m-[m
+ web/.next/server/middleware-build-manifest.js      |   22 [31m-[m
+ web/.next/server/middleware-manifest.json          |    6 [31m-[m
+ .../server/middleware-react-loadable-manifest.js   |    1 [31m-[m
+ web/.next/server/next-font-manifest.js             |    1 [31m-[m
+ web/.next/server/next-font-manifest.json           |    1 [31m-[m
+ web/.next/server/pages-manifest.json               |    1 [31m-[m
+ web/.next/server/server-reference-manifest.js      |    1 [31m-[m
+ web/.next/server/server-reference-manifest.json    |    5 [31m-[m
+ web/.next/server/vendor-chunks/@babel.js           |   65 [31m-[m
+ web/.next/server/vendor-chunks/@swc.js             |   55 [31m-[m
+ web/.next/server/vendor-chunks/clsx.js             |   25 [31m-[m
+ web/.next/server/vendor-chunks/d3-array.js         |  175 [31m-[m
+ web/.next/server/vendor-chunks/d3-color.js         |   35 [31m-[m
+ web/.next/server/vendor-chunks/d3-format.js        |  165 [31m-[m
+ web/.next/server/vendor-chunks/d3-interpolate.js   |  155 [31m-[m
+ web/.next/server/vendor-chunks/d3-path.js          |   25 [31m-[m
+ web/.next/server/vendor-chunks/d3-scale.js         |  245 [31m-[m
+ web/.next/server/vendor-chunks/d3-shape.js         |  615 [31m---[m
+ web/.next/server/vendor-chunks/d3-time-format.js   |   35 [31m-[m
+ web/.next/server/vendor-chunks/d3-time.js          |  125 [31m-[m
+ web/.next/server/vendor-chunks/decimal.js-light.js |   25 [31m-[m
+ web/.next/server/vendor-chunks/eventemitter3.js    |   25 [31m-[m
+ web/.next/server/vendor-chunks/fast-equals.js      |   25 [31m-[m
+ web/.next/server/vendor-chunks/internmap.js        |   25 [31m-[m
+ web/.next/server/vendor-chunks/lodash.js           | 1924 [31m--------[m
+ web/.next/server/vendor-chunks/next.js             | 3582 [31m---------------[m
+ web/.next/server/vendor-chunks/object-assign.js    |   25 [31m-[m
+ web/.next/server/vendor-chunks/prop-types.js       |   89 [31m-[m
+ web/.next/server/vendor-chunks/react-is.js         |   35 [31m-[m
+ web/.next/server/vendor-chunks/react-smooth.js     |  105 [31m-[m
+ .../server/vendor-chunks/react-transition-group.js |   85 [31m-[m
+ web/.next/server/vendor-chunks/recharts-scale.js   |   62 [31m-[m
+ web/.next/server/vendor-chunks/recharts.js         |  645 [31m---[m
+ web/.next/server/vendor-chunks/tiny-invariant.js   |   25 [31m-[m
+ web/.next/server/vendor-chunks/victory-vendor.js   |   35 [31m-[m
+ web/.next/server/webpack-runtime.js                |  209 [31m-[m
+ ...s_next_dist_client_dev_noop-turbopack-hmr_js.js |   22 [31m-[m
+ web/.next/static/chunks/app-pages-internals.js     |  182 [31m-[m
+ web/.next/static/chunks/app/(app)/checkin/page.js  |   83 [31m-[m
+ web/.next/static/chunks/app/(app)/layout.js        |   94 [31m-[m
+ .../static/chunks/app/(app)/nutrition/page.js      |   83 [31m-[m
+ web/.next/static/chunks/app/(app)/page.js          |   94 [31m-[m
+ .../chunks/app/(app)/plans/nutrition/[id]/page.js  |  149 [31m-[m
+ web/.next/static/chunks/app/(app)/plans/page.js    |  149 [31m-[m
+ .../chunks/app/(app)/plans/training/[id]/page.js   |  149 [31m-[m
+ web/.next/static/chunks/app/(app)/profile/page.js  |   94 [31m-[m
+ web/.next/static/chunks/app/(app)/progress/page.js | 4747 [31m--------------------[m
+ web/.next/static/chunks/app/(app)/workout/page.js  |   83 [31m-[m
+ web/.next/static/chunks/app/_not-found/page.js     |   61 [31m-[m
+ web/.next/static/chunks/app/layout.js              |   94 [31m-[m
+ web/.next/static/chunks/main-app.js                | 1871 [31m--------[m
+ web/.next/static/chunks/polyfills.js               |    1 [31m-[m
+ web/.next/static/chunks/webpack.js                 | 1405 [31m------[m
+ web/.next/static/css/app/layout.css                | 1563 [31m-------[m
+ web/.next/static/development/_buildManifest.js     |    1 [31m-[m
+ web/.next/static/development/_ssgManifest.js       |    1 [31m-[m
+ .../25450479757268b8.webpack.hot-update.json       |    1 [31m-[m
+ .../2999957d964739c8.webpack.hot-update.json       |    1 [31m-[m
+ .../59f0db24f5f239b9.webpack.hot-update.json       |    1 [31m-[m
+ .../5a66e34878e0cab4.webpack.hot-update.json       |    1 [31m-[m
+ .../5fd100b720ba450c.webpack.hot-update.json       |    1 [31m-[m
+ .../webpack/633457081244afec._.hot-update.json     |    1 [31m-[m
+ .../67f32a4280048370.webpack.hot-update.json       |    1 [31m-[m
+ .../69a31fe0b6b20b68.webpack.hot-update.json       |    1 [31m-[m
+ .../6a5304af7d728be4.webpack.hot-update.json       |    1 [31m-[m
+ .../78d1fc7493af60f2.webpack.hot-update.json       |    1 [31m-[m
+ .../7ee545e1dd76abb6.webpack.hot-update.json       |    1 [31m-[m
+ .../905199585db9e818.webpack.hot-update.json       |    1 [31m-[m
+ .../9080a8ff8ac13625.webpack.hot-update.json       |    1 [31m-[m
+ .../98652c01042f6c63.webpack.hot-update.json       |    1 [31m-[m
+ .../9d1178883beac094.webpack.hot-update.json       |    1 [31m-[m
+ .../plans/page.67f32a4280048370.hot-update.js      |   22 [31m-[m
+ .../plans/page.9080a8ff8ac13625.hot-update.js      |   22 [31m-[m
+ .../profile/page.ba6270694c2bc67e.hot-update.js    |   22 [31m-[m
+ .../profile/page.e825c887105bb105.hot-update.js    |   22 [31m-[m
+ .../profile/page.faeba53fe59efafd.hot-update.js    |   22 [31m-[m
+ .../app/layout.25450479757268b8.hot-update.js      |   22 [31m-[m
+ .../app/layout.5a66e34878e0cab4.hot-update.js      |   22 [31m-[m
+ .../app/layout.67f32a4280048370.hot-update.js      |   22 [31m-[m
+ .../app/layout.69a31fe0b6b20b68.hot-update.js      |   22 [31m-[m
+ .../app/layout.78d1fc7493af60f2.hot-update.js      |   22 [31m-[m
+ .../app/layout.905199585db9e818.hot-update.js      |   22 [31m-[m
+ .../app/layout.9080a8ff8ac13625.hot-update.js      |   22 [31m-[m
+ .../app/layout.ba6270694c2bc67e.hot-update.js      |   22 [31m-[m
+ .../app/layout.c3f62ba56021fc30.hot-update.js      |   22 [31m-[m
+ .../app/layout.e825c887105bb105.hot-update.js      |   22 [31m-[m
+ .../app/layout.f8afd0f18d82b425.hot-update.js      |   22 [31m-[m
+ .../app/layout.faeba53fe59efafd.hot-update.js      |   22 [31m-[m
+ .../ba6270694c2bc67e.webpack.hot-update.json       |    1 [31m-[m
+ .../bc32d70a849ced87.webpack.hot-update.json       |    1 [31m-[m
+ .../c3f62ba56021fc30.webpack.hot-update.json       |    1 [31m-[m
+ .../e825c887105bb105.webpack.hot-update.json       |    1 [31m-[m
+ .../f3d37c504fba6a0c.webpack.hot-update.json       |    1 [31m-[m
+ .../f8afd0f18d82b425.webpack.hot-update.json       |    1 [31m-[m
+ .../fada7be2c6d8a40b.webpack.hot-update.json       |    1 [31m-[m
+ .../faeba53fe59efafd.webpack.hot-update.json       |    1 [31m-[m
+ .../webpack/webpack.25450479757268b8.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.2999957d964739c8.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.59f0db24f5f239b9.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.5a66e34878e0cab4.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.5fd100b720ba450c.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.67f32a4280048370.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.69a31fe0b6b20b68.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.6a5304af7d728be4.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.78d1fc7493af60f2.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.7ee545e1dd76abb6.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.905199585db9e818.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.9080a8ff8ac13625.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.98652c01042f6c63.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.9d1178883beac094.hot-update.js |   24 [31m-[m
+ .../webpack/webpack.ba6270694c2bc67e.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.bc32d70a849ced87.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.c3f62ba56021fc30.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.e825c887105bb105.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.f3d37c504fba6a0c.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.f8afd0f18d82b425.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.fada7be2c6d8a40b.hot-update.js |   12 [31m-[m
+ .../webpack/webpack.faeba53fe59efafd.hot-update.js |   12 [31m-[m
+ web/.next/trace                                    |   33 [31m-[m
+ web/.next/types/app/(app)/checkin/page.ts          |   84 [31m-[m
+ web/.next/types/app/(app)/layout.ts                |   84 [31m-[m
+ web/.next/types/app/(app)/nutrition/page.ts        |   84 [31m-[m
+ web/.next/types/app/(app)/page.ts                  |   84 [31m-[m
+ .../types/app/(app)/plans/nutrition/[id]/page.ts   |   84 [31m-[m
+ web/.next/types/app/(app)/plans/page.ts            |   84 [31m-[m
+ .../types/app/(app)/plans/training/[id]/page.ts    |   84 [31m-[m
+ web/.next/types/app/(app)/profile/page.ts          |   84 [31m-[m
+ web/.next/types/app/(app)/progress/page.ts         |   84 [31m-[m
+ web/.next/types/app/(app)/workout/page.ts          |   84 [31m-[m
+ web/.next/types/app/layout.ts                      |   84 [31m-[m
+ web/.next/types/cache-life.d.ts                    |  141 [31m-[m
+ web/.next/types/package.json                       |    1 [31m-[m
+ web/.next/types/routes.d.ts                        |   67 [31m-[m
+ web/.next/types/validator.ts                       |  160 [31m-[m
+ web/app/(app)/plans/nutrition/[id]/page.tsx        |    7 [32m+[m[31m-[m
+ web/app/(app)/plans/training/[id]/page.tsx         |    7 [32m+[m[31m-[m
+ 209 files changed, 10 insertions(+), 25147 deletions(-)
