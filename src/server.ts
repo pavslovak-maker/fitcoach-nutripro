@@ -70,7 +70,7 @@ async function bootstrap() {
 
   registerRoutes(app);
 
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler((error: any, request, reply) => {
     app.log.error({ err: error, url: request.url });
 
     if (error.name === 'ZodError') {

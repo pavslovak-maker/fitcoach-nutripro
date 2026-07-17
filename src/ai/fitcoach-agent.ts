@@ -167,7 +167,7 @@ export async function callFitCoach(
     throw new Error(`Anthropic API error ${response.status}: ${errorBody}`);
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as any;
   const rawText = data.content
     .filter((block: any) => block.type === 'text')
     .map((block: any) => block.text)
