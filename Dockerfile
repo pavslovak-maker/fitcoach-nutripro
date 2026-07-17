@@ -23,4 +23,4 @@ RUN npm run build
 EXPOSE 3001
 
 # Start server directly
-CMD ["npx", "tsx", "src/server.ts"]
+CMD ["sh", "-c", "echo 'Starting...' && npx tsx src/server.ts 2>&1"]
