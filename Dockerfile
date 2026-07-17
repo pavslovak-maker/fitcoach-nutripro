@@ -21,4 +21,4 @@ RUN npm run build
 EXPOSE 3001
 
 # Start with migrations and production server
-CMD sh -c "npx prisma migrate deploy && npm start"
+CMD sh -c "npx prisma migrate deploy && npx tsx src/server.ts"
