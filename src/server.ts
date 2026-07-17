@@ -80,9 +80,9 @@ async function bootstrap() {
       return reply.status(409).send({ error: 'duplicate_entry' });
     }
 
-    const statusCode = error.statusCode ?? 500;
+    const statusCode = (error as any).statusCode ?? 500;
     return reply.status(statusCode).send({
-      error: statusCode >= 500 ? 'internal_error' : error.message,
+      error: statusCode >= 500 ? 'internal_error' : (error as any).message,
     });
   });
 
@@ -104,8 +104,8 @@ process.on('uncaughtException', (err) => {
 
 console.log('🚀 Bootstrap starting...');
 
-bootstrap().catch((err) => {
+bootstrap().catch((err: any) => {
   console.error('❌ Fatal error during bootstrap:', err);
-  console.error(err.stack);
+  console.error(err?.stack);
   process.exit(1);
 });
