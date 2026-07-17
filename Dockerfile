@@ -14,11 +14,13 @@ RUN npx prisma generate
 
 # Copy source
 COPY . .
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Build backend
 RUN npm run build
 
 EXPOSE 3001
 
-# Start with migrations and production server
-CMD sh -c "echo 'DATABASE_URL: '$DATABASE_URL && echo 'JWT_SECRET: '$JWT_SECRET && npx prisma migrate deploy && npx tsx src/server.ts"
+# Start with entrypoint script
+ENTRYPOINT ["/entrypoint.sh"]
