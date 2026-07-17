@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 
@@ -29,7 +29,8 @@ interface Meal {
   poznamka: string | null;
 }
 
-export default function NutritionPlanDetailPage({ params }: { params: { id: string } }) {
+export default function NutritionPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [plan, setPlan] = useState<NutritionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,7 +43,7 @@ export default function NutritionPlanDetailPage({ params }: { params: { id: stri
     setLoading(true);
     try {
       const historyData = await api.get<any>('/plans/history');
-      const found = historyData.nutritionPlans.find((p: any) => p.id === params.id);
+      const found = historyData.nutritionPlans.find((p: any) => p.id === id);
       if (!found) throw new Error('Plán nenalezen');
       setPlan(found);
     } catch (e: any) {

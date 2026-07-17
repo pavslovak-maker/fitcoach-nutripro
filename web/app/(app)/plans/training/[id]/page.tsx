@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 
@@ -33,7 +33,8 @@ interface Exercise {
   poznamka_technika: string | null;
 }
 
-export default function TrainingPlanDetailPage({ params }: { params: { id: string } }) {
+export default function TrainingPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,7 +50,7 @@ export default function TrainingPlanDetailPage({ params }: { params: { id: strin
       // Hacky way — in real app you'd want /plans/training/:id endpoint
       // For now, we'll load from history and find it
       const historyData = await api.get<any>('/plans/history');
-      const found = historyData.trainingPlans.find((p: any) => p.id === params.id);
+      const found = historyData.trainingPlans.find((p: any) => p.id === id);
       if (!found) throw new Error('Plán nenalezen');
       setPlan(found);
     } catch (e: any) {

@@ -3,6 +3,8 @@ node_modules/
 
 # Build
 dist/
+web/.next/
+web/out/
 
 # Environment
 .env
