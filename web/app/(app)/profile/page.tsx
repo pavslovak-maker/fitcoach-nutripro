@@ -180,14 +180,14 @@ export default function ProfilePage() {
           <FormField
             label="Zdravotní omezení (oddělená čárkou)"
             value={Array.isArray(displayValue('zdravotni_omezeni')) ? displayValue('zdravotni_omezeni').join(', ') : displayValue('zdravotni_omezeni') || ''}
-            onChange={(v) => handleChange('zdravotni_omezeni', v.split(',').map(s => s.trim()).filter(Boolean))}
+            onChange={(v) => handleChange('zdravotni_omezeni', v.split(',').map((s: string) => s.trim()).filter(Boolean))}
             type="textarea"
           />
 
           <FormField
             label="Alergie/Intolerance (oddělené čárkou)"
             value={Array.isArray(displayValue('alergie_intolerance')) ? displayValue('alergie_intolerance').join(', ') : displayValue('alergie_intolerance') || ''}
-            onChange={(v) => handleChange('alergie_intolerance', v.split(',').map(s => s.trim()).filter(Boolean))}
+            onChange={(v) => handleChange('alergie_intolerance', v.split(',').map((s: string) => s.trim()).filter(Boolean))}
             type="textarea"
           />
 
@@ -218,7 +218,7 @@ export default function ProfilePage() {
             <input
               type="text"
               value={Array.isArray(displayValue('dostupne_vybaveni')) ? displayValue('dostupne_vybaveni').join(', ') : displayValue('dostupne_vybaveni') || ''}
-              onChange={(e) => handleChange('dostupne_vybaveni', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+              onChange={(e) => handleChange('dostupne_vybaveni', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
               placeholder="Činka, činky, guma, atd."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm"
             />
