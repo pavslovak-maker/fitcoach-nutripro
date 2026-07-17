@@ -22,5 +22,5 @@ RUN npm run build
 
 EXPOSE 3001
 
-# Start with entrypoint script
-ENTRYPOINT ["/entrypoint.sh"]
+# Start server directly
+CMD ["sh", "-c", "npx prisma migrate deploy && exec npx tsx src/server.ts"]
