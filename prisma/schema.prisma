@@ -1,0 +1,615 @@
+// ============================================================
+// Prisma Schema — FitCoach & NutriPro
+// Zrcadlí 001_initial_schema.sql
+// Prisma je ORM vrstva — typy generuje automaticky
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────
+
+enum UserRole {
+  client
+  admin
+}
+
+enum Gender {
+  muz
+  zena
+  jine
+}
+
+enum ExerciseLevel {
+  zacatecnik
+  mirne_pokrocily
+  pokrocily
+}
+
+enum GoalType {
+  hubnuti
+  nabirani
+  udrzeni
+  vykon
+}
+
+enum PlanStatus {
+  draft
+  active
+  archived
+}
+
+enum MealType {
+  snidane
+  obed
+  svacina
+  vecere
+}
+
+enum DayOfWeek {
+  po
+  ut
+  st
+  ct
+  pa
+  so
+  ne
+}
+
+enum RecommendationType {
+  trenink_uprava
+  kalorie_uprava
+  deload
+  jine
+}
+
+enum RecommendationStatus {
+  navrzeno
+  prijato
+  zamitnuto
+}
+
+enum TrainingDayType {
+  rest
+  light
+  medium
+  hard
+}
+
+enum BodyPart {
+  zada
+  koleno
+  rameno
+  krk
+  kycel
+  loket
+  zapesti
+  hlezno
+  jine
+}
+
+enum FoodLoggingMode {
+  simple
+  text
+  detailed
+}
+
+enum WearableType {
+  garmin
+  suunto
+  withings
+  fitbit
+  google_fit
+}
+
+enum SyncStatus {
+  success
+  token_expired
+  api_error
+  rate_limit
+  no_new_data
+}
+
+// ─── Models ─────────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique @db.Text
+  password_hash  String    @db.Text
+  role           UserRole  @default(client)
+  is_active      Boolean   @default(true)
+  email_verified Boolean   @default(false)
+  last_login_at  DateTime? @db.Timestamptz()
+  created_at     DateTime  @default(now()) @db.Timestamptz()
+  updated_at     DateTime  @updatedAt @db.Timestamptz()
+
+  // Relace
+  fitness_profile          FitnessProfile?
+  goals                    Goal[]
+  daily_checkins           DailyCheckin[]
+  workout_sessions         WorkoutSession[]
+  nutrition_logs           NutritionLog[]
+  training_plans           TrainingPlan[]
+  nutrition_plans          NutritionPlan[]
+  ai_recommendations       AIRecommendation[]
+  weekly_analyses          WeeklyAnalysis[]
+  health_issues            HealthIssue[]
+  wearable_devices         WearableDevice[]
+  wearable_data            WearableDataDaily[]
+  ai_jobs                  AIJob[]
+  notification_preferences NotificationPreferences?
+  audit_logs               AuditLog[]
+
+  @@map("users")
+}
+
+model FitnessProfile {
+  id String @id @db.Uuid
+
+  // Základní údaje
+  jmeno            String @db.Text
+  pohlavi          Gender
+  datum_narozeni   DateTime @db.Date
+  vyska_cm         Int
+  aktualni_vaha_kg Decimal  @db.Decimal(5, 1)
+
+  // Cvičení
+  uroven_cviceni     ExerciseLevel
+  treninky_tyden     Int
+  delka_treninku_min Int
+  dostupne_vybaveni  String[] @default([])
+
+  // Zdravotní (šifrováno na app vrstvě)
+  zdravotni_omezeni    String[] @default([])
+  leky                 String?  @db.Text
+  alergie_intolerance  String[] @default([])
+
+  // Stravování
+  stravovaci_preference String?         @db.Text
+  pocet_jidel_denne     Int             @default(4)
+  food_logging_mode     FoodLoggingMode @default(simple)
+
+  // Termíny
+  pevne_terminy Json @default("[]")
+
+  // Vypočtené (systém)
+  bmr_kcal           Int?
+  tdee_kcal          Int?
+  cilove_kalorie     Int?
+  cilove_bilkoviny_g Int?
+  cilove_sacharidy_g Int?
+  cilove_tuky_g      Int?
+
+  preferovany_cas_treninku String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @updatedAt @db.Timestamptz()
+
+  // Relace
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("fitness_profiles")
+}
+
+model Goal {
+  id      String   @id @default(uuid()) @db.Uuid
+  user_id String   @db.Uuid
+
+  typ_cile       GoalType
+  cilova_vaha_kg Decimal?  @db.Decimal(5, 1)
+  datum_od       DateTime  @default(now()) @db.Date
+  datum_do       DateTime? @db.Date
+  aktivni        Boolean   @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @updatedAt @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Max 1 aktivní cíl — enforced unique partial indexem v migraci
+  @@index([user_id])
+  @@map("goals")
+}
+
+model DailyCheckin {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+  datum   DateTime @db.Date
+
+  vaha_kg          Decimal? @db.Decimal(5, 1)
+  spanek_hodin     Decimal? @db.Decimal(3, 1)
+  spanek_kvalita   Int?     // 1-5
+  energie          Int?     // 1-5
+  ma_bolest        Boolean  @default(false)
+  bolest_lokalizace BodyPart?
+  bolest_intenzita Int?     // 1-10
+  bolest_poznamka  String?  @db.Text
+  pitny_rezim_litru Decimal? @db.Decimal(3, 1)
+  kroky            Int?
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, datum])
+  @@index([user_id, datum(sort: Desc)])
+  @@map("daily_checkins")
+}
+
+model WorkoutSession {
+  id          String   @id @default(uuid()) @db.Uuid
+  user_id     String   @db.Uuid
+  plan_day_id String?  @db.Uuid
+  datum       DateTime @db.Date
+
+  typ_treninku String  @db.Text
+  odcviceno    Boolean
+  delka_min    Int?
+  rpe          Int?    // 1-10
+  poznamka     String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  user User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  sets WorkoutSet[]
+
+  @@index([user_id, datum(sort: Desc)])
+  @@map("workout_sessions")
+}
+
+model WorkoutSet {
+  id         String @id @default(uuid()) @db.Uuid
+  session_id String @db.Uuid
+
+  cvik        String  @db.Text
+  serie_cislo Int
+  opakovani   Int?
+  zatez_kg    Decimal? @db.Decimal(5, 1)
+  technika_ok Boolean?
+  poznamka    String?  @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  session WorkoutSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id])
+  @@map("workout_sets")
+}
+
+model NutritionLog {
+  id      String   @id @default(uuid()) @db.Uuid
+  user_id String   @db.Uuid
+  datum   DateTime @db.Date
+
+  jidlo_typ   MealType
+  dle_planu   Boolean?
+  popis       String?  @db.Text
+  kalorie     Int?
+  bilkoviny_g Decimal? @db.Decimal(5, 1)
+  sacharidy_g Decimal? @db.Decimal(5, 1)
+  tuky_g      Decimal? @db.Decimal(5, 1)
+  foto_url    String?  @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, datum(sort: Desc)])
+  @@map("nutrition_logs")
+}
+
+model TrainingPlan {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  nazev             String     @db.Text
+  status            PlanStatus @default(draft)
+  platny_od         DateTime   @db.Date
+  platny_do         DateTime?  @db.Date
+  generated_by      String     @default("fitcoach_ai") @db.Text
+  recommendation_id String?    @db.Uuid
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @updatedAt @db.Timestamptz()
+
+  user User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  days TrainingPlanDay[]
+
+  @@index([user_id])
+  @@map("training_plans")
+}
+
+model TrainingPlanDay {
+  id      String @id @default(uuid()) @db.Uuid
+  plan_id String @db.Uuid
+
+  den       DayOfWeek
+  typ_dne   TrainingDayType
+  delka_min Int
+  poznamka  String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  plan      TrainingPlan          @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  exercises TrainingPlanExercise[]
+
+  @@index([plan_id])
+  @@map("training_plan_days")
+}
+
+model TrainingPlanExercise {
+  id          String @id @default(uuid()) @db.Uuid
+  plan_day_id String @db.Uuid
+
+  poradi             Int
+  cvik               String  @db.Text
+  serie              Int
+  opakovani          String  @db.Text // "8-10"
+  zatez_doporucena   String? @db.Text
+  pauza_s            Int     @default(90)
+  poznamka_technika  String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  plan_day TrainingPlanDay @relation(fields: [plan_day_id], references: [id], onDelete: Cascade)
+
+  @@index([plan_day_id])
+  @@map("training_plan_exercises")
+}
+
+model NutritionPlan {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  status                   PlanStatus @default(draft)
+  kalorie_treninkovy_den   Int
+  kalorie_odpocinkovy_den  Int
+  bilkoviny_g              Int
+  sacharidy_g              Int
+  tuky_g                   Int
+  generated_by             String @default("nutripro_ai") @db.Text
+  recommendation_id        String? @db.Uuid
+  platny_od                DateTime @db.Date
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @updatedAt @db.Timestamptz()
+
+  user  User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  meals NutritionPlanMeal[]
+
+  @@map("nutrition_plans")
+}
+
+model NutritionPlanMeal {
+  id      String @id @default(uuid()) @db.Uuid
+  plan_id String @db.Uuid
+
+  jidlo_typ        MealType
+  je_treninkovy_den Boolean @default(false)
+  nazev            String   @db.Text
+  suroviny         Json     @default("[]")
+  kalorie          Int
+  bilkoviny_g      Decimal  @db.Decimal(5, 1)
+  sacharidy_g      Decimal  @db.Decimal(5, 1)
+  tuky_g           Decimal  @db.Decimal(5, 1)
+  poznamka         String?  @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  plan NutritionPlan @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+
+  @@index([plan_id])
+  @@map("nutrition_plan_meals")
+}
+
+model AIRecommendation {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  typ    RecommendationType
+  status RecommendationStatus @default(navrzeno)
+
+  popis       String @db.Text
+  zduvodneni  String @db.Text
+
+  puvodni_hodnota      Json?
+  navrzena_hodnota     Json?
+  vstupni_data_snapshot Json
+
+  generated_by       String  @db.Text
+  decided_at         DateTime? @db.Timestamptz()
+  cross_check_passed Boolean @default(false)
+  cross_check_log    Json?
+  idempotency_key    String? @unique @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at(sort: Desc)])
+  @@index([user_id, status])
+  @@map("ai_recommendations")
+}
+
+model WeeklyAnalysis {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  tyden_od DateTime @db.Date
+  tyden_do DateTime @db.Date
+
+  prumerna_vaha            Decimal? @db.Decimal(5, 1)
+  zmena_vahy               Decimal? @db.Decimal(4, 1)
+  prumerny_spanek          Decimal? @db.Decimal(3, 1)
+  prumerny_rpe             Decimal? @db.Decimal(3, 1)
+  prumerna_energie         Decimal? @db.Decimal(3, 1)
+  pocet_treninku           Int      @default(0)
+  pocet_planovanych_treninku Int    @default(0)
+  adherence_treninky_pct   Int?
+  adherence_strava_pct     Int?
+  prumerny_kaloricky_prijem Int?
+
+  pozitivni_pozorovani String? @db.Text
+  vyzvy                String? @db.Text
+  doporuceni           String? @db.Text
+  motivacni_zprava     String? @db.Text
+  plan_next_week       Json?
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, tyden_od])
+  @@map("weekly_analyses")
+}
+
+model HealthIssue {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  lokalizace    BodyPart
+  intenzita     Int
+  typ_bolesti   String?  @db.Text
+  kdy_zacala    DateTime? @db.Date
+  spoustec      String?  @db.Text
+  zhorsovani    Boolean  @default(false)
+
+  is_red_flag    Boolean @default(false)
+  red_flag_reason String? @db.Text
+
+  doporucen_lekar           Boolean   @default(false)
+  datum_lekarske_konzultace DateTime? @db.Date
+  lekar_vysledek            String?   @db.Text
+
+  vyreseno       Boolean   @default(false)
+  vyreseno_datum DateTime? @db.Date
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @updatedAt @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at(sort: Desc)])
+  @@map("health_issues")
+}
+
+model WearableDevice {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  typ         WearableType
+  external_id String? @db.Text
+
+  // Tokeny šifrované na app vrstvě
+  access_token_encrypted  String    @db.Text
+  refresh_token_encrypted String?   @db.Text
+  token_expires_at        DateTime? @db.Timestamptz()
+
+  je_aktivni    Boolean   @default(true)
+  posledni_sync DateTime? @db.Timestamptz()
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @updatedAt @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, typ])
+  @@map("wearable_devices")
+}
+
+model WearableDataDaily {
+  id      String   @id @default(uuid()) @db.Uuid
+  user_id String   @db.Uuid
+  datum   DateTime @db.Date
+  zdroj   WearableType
+
+  kroky             Int?
+  kalorie_spalene   Int?
+  kalorie_aktivni   Int?
+  srdecni_tep_klid  Int?
+  srdecni_tep_max   Int?
+  stress_score      Int?
+  body_battery      Int?
+
+  spanek_hodin    Decimal? @db.Decimal(3, 1)
+  spanek_deep_min Int?
+  spanek_rem_min  Int?
+  spanek_light_min Int?
+
+  vaha_kg         Decimal? @db.Decimal(5, 1)
+  telesny_tuk_pct Decimal? @db.Decimal(4, 1)
+  svalova_hmota_kg Decimal? @db.Decimal(5, 1)
+
+  raw_data  Json?
+  synced_at DateTime @default(now()) @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, datum, zdroj])
+  @@map("wearable_data_daily")
+}
+
+model AIJob {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  idempotency_key          String  @unique @db.Text
+  status                   String  @default("queued") @db.Text
+  job_type                 String  @db.Text
+  result_recommendation_id String? @db.Uuid
+  error_message            String? @db.Text
+
+  started_at   DateTime? @db.Timestamptz()
+  completed_at DateTime? @db.Timestamptz()
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at(sort: Desc)])
+  @@map("ai_jobs")
+}
+
+model NotificationPreferences {
+  id String @id @db.Uuid
+
+  ranni_checkin    Boolean @default(true)
+  pred_treninkem   Boolean @default(true)
+  po_treninku      Boolean @default(true)
+  jidlo_reminder   Boolean @default(false)
+  tydenni_shrnuti  Boolean @default(true)
+  mesicni_progress Boolean @default(true)
+
+  preferovany_cas_ranni DateTime? @db.Time()
+  push_token            String?   @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @updatedAt @db.Timestamptz()
+
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model AuditLog {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+
+  action        String  @db.Text
+  resource_type String? @db.Text
+  resource_id   String? @db.Uuid
+  detail        Json?
+  ip_address    String? @db.Inet
+
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at(sort: Desc)])
+  @@map("audit_log")
+}

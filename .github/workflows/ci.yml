@@ -1,0 +1,119 @@
+# ============================================================
+# CI/CD Pipeline — GitHub Actions
+# Spouští se na push do main a na PR
+# ============================================================
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ─── Typecheck + Lint + Test ──────────────────────────
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fitcoach
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: fitcoach_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://fitcoach:test_password@localhost:5432/fitcoach_test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm run test -- --reporter=verbose
+        env:
+          DATABASE_URL: postgresql://fitcoach:test_password@localhost:5432/fitcoach_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_jwt_secret_for_ci
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ENCRYPTION_KEY: test_encryption_key_32bytes_hex00
+
+  # ─── Build Docker image ───────────────────────────────
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -f docker/Dockerfile -t fitcoach-api:${{ github.sha }} .
+
+      - name: Tag latest
+        run: docker tag fitcoach-api:${{ github.sha }} fitcoach-api:latest
+
+      # V produkci: push do container registry
+      # - name: Push to registry
+      #   run: |
+      #     docker tag fitcoach-api:latest $REGISTRY/fitcoach-api:latest
+      #     docker push $REGISTRY/fitcoach-api:latest
+
+  # ─── Deploy (manuální nebo na main push) ──────────────
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Railway deploy
+      # - name: Deploy to Railway
+      #   uses: bervProject/railway-deploy@main
+      #   with:
+      #     railway_token: ${{ secrets.RAILWAY_TOKEN }}
+      #     service: fitcoach-api
+
+      - name: Deploy placeholder
+        run: echo "Deploy step — configure for your platform (Railway, Fly.io, etc.)"

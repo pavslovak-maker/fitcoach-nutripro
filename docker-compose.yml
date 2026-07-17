@@ -1,0 +1,87 @@
+# ============================================================
+# Docker Compose — lokální vývoj
+# Spuštění: docker compose up -d
+# ============================================================
+
+services:
+  # ─── PostgreSQL ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: fitcoach-db
+    environment:
+      POSTGRES_USER: fitcoach
+      POSTGRES_PASSWORD: fitcoach_dev
+      POSTGRES_DB: fitcoach_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Inicializační skripty (volitelné)
+      # - ./db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitcoach -d fitcoach_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ──────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: fitcoach-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+
+  # ─── API Server (produkční build) ──────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: fitcoach-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://fitcoach:fitcoach_dev@postgres:5432/fitcoach_dev
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-dev_secret_change_in_production}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-dev_encryption_key_32bytes_hex00}
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
+  # ─── AI Worker (oddělený proces) ────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: fitcoach-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://fitcoach:fitcoach_dev@postgres:5432/fitcoach_dev
+      REDIS_URL: redis://redis:6379
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-dev_encryption_key_32bytes_hex00}
+    command: ["node", "dist/services/ai-worker.js"]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

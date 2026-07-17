@@ -1,0 +1,50 @@
+# ============================================================
+# Mobile CI — EAS Build na GitHub Actions
+# Spouští se při tagu v*.*.* (release)
+# ============================================================
+
+name: Mobile Build
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # Preview build (TestFlight + Internal Testing)
+      - name: Build Preview
+        if: contains(github.ref, '-beta') || contains(github.ref, '-rc')
+        run: eas build --platform all --profile preview --non-interactive
+
+      # Production build
+      - name: Build Production
+        if: "!contains(github.ref, '-beta') && !contains(github.ref, '-rc')"
+        run: eas build --platform all --profile production --non-interactive
+
+      # Auto-submit to stores
+      - name: Submit to App Store
+        if: "!contains(github.ref, '-beta')"
+        run: eas submit --platform ios --non-interactive
+        continue-on-error: true
+
+      - name: Submit to Google Play
+        if: "!contains(github.ref, '-beta')"
+        run: eas submit --platform android --non-interactive
+        continue-on-error: true

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.app/schema.json",
+  "build": {
+    "builder": "dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "startCommand": "npx prisma migrate deploy && npm run dev",
+    "restartPolicyMaxRetries": 5
+  }
+}
