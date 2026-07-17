@@ -20,5 +20,8 @@ COPY . .
 
 EXPOSE 3001
 
-# Run migrations and start
-CMD npx prisma migrate deploy && npm run dev
+# Build if needed
+RUN npm run build || true
+
+# Start with migrations
+CMD sh -c "npx prisma migrate deploy && npm run dev"
